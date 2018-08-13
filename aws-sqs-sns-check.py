@@ -13,7 +13,19 @@ def load_config():
 
 
 def get_boto_client():
-    return boto3.client('sqs')
+    return (boto3.client('sqs'), boto3.client('sns'))
+
+
+def get_aws_account_id():
+    return boto3.client('sts').get_caller_identity().get('Account')
+
+
+def get_aws_region():
+    return boto3.session.Session().region_name
+
+
+def get_sns_arn(sns_name):
+    return 'arn:aws:sns:%s:%s:%s' % (get_aws_region(), get_aws_account_id(), sns_name)
 
 
 def fetch_queue_messages(sqs, config):
@@ -26,20 +38,26 @@ def fetch_queue_messages(sqs, config):
             for message in messages.get('Messages', [])]
 
 
-def send_sns_notification():
-    print ('SNS Notification')
+def send_sns_notification(sns, config):
+    response = sns.publish(
+        TopicArn = get_sns_arn(config['sns']['topic_name']),
+        Subject = 'SQS Processes Complete',
+        Message = 'The messages stored in SQS are processed',
+    )
+
+    print ('SQS Messages are processed and SNS Notification sent')
 
 
 def get_utc_now():
     return datetime.utcnow().strftime("%b %d %Y %H:%M:%S")
 
 
-def process_queue_messages(sqs, config):
+def process_queue_messages(sqs, sns, config):
     while True:
         messages = fetch_queue_messages(sqs, config)
         
         if len(messages) == 0:
-            send_sns_notification()
+            send_sns_notification(sns, config)
             return
 
         for message in messages:
@@ -51,5 +69,5 @@ def process_queue_messages(sqs, config):
 
 if __name__ == "__main__":
     config = load_config()
-    sqs = get_boto_client()
-    process_queue_messages(sqs, config)
+    sqs, sns = get_boto_client()
+    process_queue_messages(sqs, sns, config)
