@@ -1,5 +1,8 @@
 {
     "sqs": {
         "queue_url": "https://us-east-2.queue.amazonaws.com/337499005688/timestamp-sqs"
+    },
+    "sns": {
+        "topic_name": "aws-sns"
     }
 }
