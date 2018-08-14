@@ -5,6 +5,8 @@ import json
 
 from datetime import datetime
 
+aws_account_id = None
+aws_region = None
 
 def load_config():
     with open('config.json') as fp:
@@ -17,11 +19,25 @@ def get_boto_client():
 
 
 def get_aws_account_id():
-    return boto3.client('sts').get_caller_identity().get('Account')
+    global aws_account_id
+
+    if aws_account_id is None:
+        aws_account_id = boto3.client('sts').get_caller_identity().get('Account')
+
+    return aws_account_id
 
 
 def get_aws_region():
-    return boto3.session.Session().region_name
+    global aws_region
+
+    if aws_region is None:
+        aws_region = boto3.session.Session().region_name
+
+    return aws_region
+
+
+def get_sqs_url(sqs_name):
+    return "https://%s.queue.amazonaws.com/%s/%s" % (get_aws_region(), get_aws_account_id(), sqs_name)
 
 
 def get_sns_arn(sns_name):
@@ -30,7 +46,7 @@ def get_sns_arn(sns_name):
 
 def fetch_queue_messages(sqs, config):
     messages = sqs.receive_message(
-        QueueUrl = config['sqs']['queue_url'],
+        QueueUrl = get_sqs_url(config['sqs']['queue_name']),
         MessageAttributeNames= ['timestamp'],
     )
 
