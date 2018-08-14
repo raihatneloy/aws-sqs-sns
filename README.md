@@ -20,5 +20,5 @@ From the root directory of the repository, run the following command:<br/>
 }
 ```
 From the root directory of the repository, run the following command:<br/>
-`./aws-sqs-sns-check.py`
+`./aws-sqs-sns-check.py`<br/>
 After the command completes, there will be a file on the root directory of the repository names `messages.txt` where the outputs should be written
