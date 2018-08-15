@@ -38,10 +38,13 @@ def get_sns_arn(sns_name):
 def fetch_queue_messages(sqs, config):
     messages = sqs.receive_message(
         QueueUrl = get_sqs_url(config['sqs']['queue_name']),
-        MessageAttributeNames= ['timestamp'],
     )
 
-    return [{'timestamp': message['MessageAttributes']['timestamp']['StringValue']}
+    for message in messages.get('Messages', []):
+        message['Body'] = message['Body'].replace('“', '"')
+        message['Body'] = message['Body'].replace('”', '"')
+
+    return [json.loads(message['Body'])
             for message in messages.get('Messages', [])]
 
 
